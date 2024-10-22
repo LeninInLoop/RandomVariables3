@@ -2,7 +2,7 @@
 from collections import Counter
 
 # Type Hinting Imports
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Any
 
 # Third-Party Library Imports
 import matplotlib.pyplot as plt
@@ -67,7 +67,7 @@ def display_results(value_counts: Dict[float, int]) -> None:
 
 
 def generate_random_floats_with_mean_variance(mean: float = 0.0, variance: float = 0.0) -> List[float]:
-    return np.array(variance) * np.random.randn( 10 ** 6 ) + np.array(mean) .tolist()
+    return ((np.array(variance) * np.random.randn( 10 ** 6 )) + np.array(mean)) .tolist()
 
 
 def initialize_value_count_dict(x_range:Tuple[Union[int],Union[int]] = (0,1)) -> Dict[float, int]:
@@ -186,14 +186,20 @@ def save_pdf_and_cdf_plot_from_pdf(
     else:
         plt.close()
 
-def fz_function(x: float, y: float) -> np.ndarray:
-    return np.sqrt(x ** 2 + y ** 2)
 
-def fz_wrapper(x: List[float], y: List[float]) -> List[float]:
-    y_values = []
-    for index, value in enumerate(x):
-        y_values.append(float(fz_function(value, y[index])))
-    return y_values
+def calculate_eigen(matrix: np.ndarray) -> tuple[Any, Any]:
+    # Check if matrix is square
+    if matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("Matrix must be square")
+    eigenvalues, eigenvectors = np.linalg.eig(matrix)
+    return eigenvalues, eigenvectors
+
+
+def create_a_matrix(cx: np.ndarray) -> tuple[np.ndarray, Any, Any]:
+    # Todo
+    eigenvalues, eigenvectors = calculate_eigen(cx)
+    return eigenvectors
+
 
 def main():
 
@@ -206,6 +212,8 @@ def main():
         mean=0.0,
         variance=np.sqrt(11)
     )
+
+    print(np.cov([random_floats_with_mean_zero_variance_sqrt7, random_floats_with_mean_zero_variance_sqrt11]))
 
     # Count the values then plot the X values to show that randn values are normal with zero mean and sqrt 7 variance.
     counted_values = count_values_by_method(
@@ -234,6 +242,31 @@ def main():
         display=True,
         file_name="randn_pdf_and_cdf_plot_sqrt11_variance.png"
     )
+
+    cx = [
+        [7, -2],
+        [-2, 11]
+    ]
+
+    A = create_a_matrix(
+        np.array(
+            cx
+        )
+    )
+
+    x_matrix = np.array(
+            [
+                random_floats_with_mean_zero_variance_sqrt7,
+                random_floats_with_mean_zero_variance_sqrt11
+            ]
+    )
+
+    # Transform Z to get correlated variables X
+    X = A @ x_matrix
+    print(np.cov(X))
+
+    cx = A.T @ np.cov(X) @ A
+    print(cx)
 
 
 if __name__ == "__main__":
