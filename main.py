@@ -13,6 +13,10 @@ from scipy import integrate
 METHOD_MANUAL = 0
 METHOD_COUNTER_CLASS = 1
 
+# Calculating A matrix Methods
+METHOD_EIGEN = 0
+METHOD_CHOLESKY = 1
+
 def round_to_decimals(value: float, decimal_places: int = 0) -> float:
     """
     Custom round function to round a number to the specified number of decimal places.
@@ -195,11 +199,20 @@ def calculate_eigen(matrix: np.ndarray) -> tuple[Any, Any]:
     return eigenvalues, eigenvectors
 
 
-def create_a_matrix(cx: np.ndarray) -> tuple[np.ndarray, Any, Any]:
-    # Todo
-    eigenvalues, eigenvectors = calculate_eigen(cx)
-    return eigenvectors
-
+def create_a_matrix(cx: np.ndarray, method: int = 0) -> np.ndarray:
+    """
+    Creates transformation matrix A using eigendecomposition.
+    For a covariance matrix cx, returns A such that A @ A.T = cx
+    """
+    if method == 0 :
+        eigenvalues, eigenvectors = calculate_eigen(cx)
+        # Create diagonal matrix of square root of eigenvalues
+        D = np.diag(np.sqrt(eigenvalues.real))
+        A = eigenvectors @ D
+    else:
+        """ Create a transformation matrix A such that A @ A.T = cov_matrix using Cholesky decomposition. """
+        A = np.linalg.cholesky(cx)  # Cholesky decomposition
+    return A
 
 def main():
 
@@ -225,7 +238,7 @@ def main():
 
     save_pdf_and_cdf_plot_from_pdf(
         counted_values,
-        display=True,
+        display=False,
         file_name="randn_pdf_and_cdf_plot_sqrt7_variance.png"
     )
 
@@ -239,33 +252,40 @@ def main():
 
     save_pdf_and_cdf_plot_from_pdf(
         counted_values,
-        display=True,
+        display=False,
         file_name="randn_pdf_and_cdf_plot_sqrt11_variance.png"
     )
 
+    # Generate X and Y values with normal pdf and zero mean.
+    random_floats_with_mean_zero_variance_one = generate_random_floats_with_mean_variance(
+        mean=0.0,
+        variance=np.sqrt(1)
+    )
+    random_floats_with_mean_zero_variance_one1 = generate_random_floats_with_mean_variance(
+        mean=0.0,
+        variance=np.sqrt(1)
+    )
+
     cx = [ # 2 x 2
-        [7, 0],
-        [0, 11]
+        [7, -2],
+        [-2 , 11]
     ]
 
     A = create_a_matrix(
-        np.array(cx)
+        np.array(cx),
+        method=METHOD_CHOLESKY
     )
 
     x_matrix = np.array( # 2 x 10 ** 6
             [
-                random_floats_with_mean_zero_variance_sqrt7,
-                random_floats_with_mean_zero_variance_sqrt11
+                random_floats_with_mean_zero_variance_one,
+                random_floats_with_mean_zero_variance_one1
             ]
     )
 
     # Transform Z to get correlated variables X
-    X = A.T @ x_matrix
+    X = A @ x_matrix
     print(np.cov(X))
-
-    cx = A.T @ np.cov(X) @ A
-    print(cx)
-
 
 if __name__ == "__main__":
     main()
