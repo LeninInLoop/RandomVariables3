@@ -243,18 +243,16 @@ def main():
         file_name="randn_pdf_and_cdf_plot_sqrt11_variance.png"
     )
 
-    cx = [
-        [7, -2],
-        [-2, 11]
+    cx = [ # 2 x 2
+        [7, 0],
+        [0, 11]
     ]
 
     A = create_a_matrix(
-        np.array(
-            cx
-        )
+        np.array(cx)
     )
 
-    x_matrix = np.array(
+    x_matrix = np.array( # 2 x 10 ** 6
             [
                 random_floats_with_mean_zero_variance_sqrt7,
                 random_floats_with_mean_zero_variance_sqrt11
@@ -262,7 +260,7 @@ def main():
     )
 
     # Transform Z to get correlated variables X
-    X = A @ x_matrix
+    X = A.T @ x_matrix
     print(np.cov(X))
 
     cx = A.T @ np.cov(X) @ A
