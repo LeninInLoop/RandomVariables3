@@ -13,10 +13,6 @@ from scipy import integrate
 METHOD_MANUAL = 0
 METHOD_COUNTER_CLASS = 1
 
-# Calculating A matrix Methods
-METHOD_EIGEN = 0
-METHOD_CHOLESKY = 1
-
 def round_to_decimals(value: float, decimal_places: int = 0) -> float:
     """
     Custom round function to round a number to the specified number of decimal places.
@@ -199,93 +195,69 @@ def calculate_eigen(matrix: np.ndarray) -> tuple[Any, Any]:
     return eigenvalues, eigenvectors
 
 
-def create_a_matrix(cx: np.ndarray, method: int = 0) -> np.ndarray:
-    """
-    Creates transformation matrix A using eigendecomposition.
-    For a covariance matrix cx, returns A such that A @ A.T = cx
-    """
-    if method == 0 :
-        eigenvalues, eigenvectors = calculate_eigen(cx)
-        # Create diagonal matrix of square root of eigenvalues
-        D = np.diag(np.sqrt(eigenvalues.real))
-        A = eigenvectors @ D
-    else:
-        """ Create a transformation matrix A such that A @ A.T = cov_matrix using Cholesky decomposition. """
-        A = np.linalg.cholesky(cx)  # Cholesky decomposition
-    return A
+def create_a_matrix(cx: np.ndarray) -> np.ndarray:
+    eigenvalues, eigenvectors = calculate_eigen(cx)
+    unnormalized_eigenvectors= eigenvectors / eigenvectors[1:, :]
+    return unnormalized_eigenvectors.T
 
 def main():
 
-    # Generate X and Y values with normal pdf and zero mean.
-    random_floats_with_mean_zero_variance_sqrt7 = generate_random_floats_with_mean_variance(
+    # Generate X and Y values with normal pdf and zero mean and variance equal to one.
+    random_floats_with_mean_zero_variance1 = generate_random_floats_with_mean_variance(
         mean=0.0,
-        variance=np.sqrt(7)
+        variance=np.sqrt(1)
     )
-    random_floats_with_mean_zero_variance_sqrt11 = generate_random_floats_with_mean_variance(
+    random_floats_with_mean_zero_variance2 = generate_random_floats_with_mean_variance(
         mean=0.0,
-        variance=np.sqrt(11)
+        variance=np.sqrt(1)
     )
 
-    print(np.cov([random_floats_with_mean_zero_variance_sqrt7, random_floats_with_mean_zero_variance_sqrt11]))
-
-    # Count the values then plot the X values to show that randn values are normal with zero mean and sqrt 7 variance.
+    # Count the values then plot the X values to show that randn values are normal with zero mean and variance of one.
     counted_values = count_values_by_method(
-        random_floats_with_mean_zero_variance_sqrt7,
+        random_floats_with_mean_zero_variance1,
         method=METHOD_COUNTER_CLASS,
-        x_range=(-12, 12)
+        x_range=(-6, 6)
     )
     display_results(counted_values)
 
     save_pdf_and_cdf_plot_from_pdf(
         counted_values,
-        display=False,
-        file_name="randn_pdf_and_cdf_plot_sqrt7_variance.png"
+        display=True,
+        file_name="randn_pdf_and_cdf_plot.png"
     )
 
-    # Count the values then plot the X values to show that randn values are normal with zero mean and sqrt 11 variance.
-    counted_values = count_values_by_method(
-        random_floats_with_mean_zero_variance_sqrt11,
-        method=METHOD_COUNTER_CLASS,
-        x_range=(-12, 12)
-    )
-    display_results(counted_values)
-
-    save_pdf_and_cdf_plot_from_pdf(
-        counted_values,
-        display=False,
-        file_name="randn_pdf_and_cdf_plot_sqrt11_variance.png"
+    cx = np.array(
+        [
+            [7, -2],
+            [-2, 11]
+        ]
     )
 
-    # Generate X and Y values with normal pdf and zero mean.
-    random_floats_with_mean_zero_variance_one = generate_random_floats_with_mean_variance(
+    a_matrix = create_a_matrix(cx)
+    print(a_matrix)
+
+    cy = a_matrix @ cx @ a_matrix.T
+    print(cy)
+
+    random_floats_with_mean_with_variance = generate_random_floats_with_mean_variance(
         mean=0.0,
-        variance=np.sqrt(1)
+        variance=np.sqrt(cy[0][0])
     )
-    random_floats_with_mean_zero_variance_one1 = generate_random_floats_with_mean_variance(
+
+    random_floats_with_mean_with_variance1 = generate_random_floats_with_mean_variance(
         mean=0.0,
-        variance=np.sqrt(1)
+        variance=np.sqrt(cy[1][1])
     )
 
-    cx = [ # 2 x 2
-        [7, -2],
-        [-2 , 11]
-    ]
-
-    A = create_a_matrix(
-        np.array(cx),
-        method=METHOD_CHOLESKY
+    y_values_transposed = np.array(
+        [
+            random_floats_with_mean_with_variance,
+            random_floats_with_mean_with_variance1
+        ]
     )
 
-    x_matrix = np.array( # 2 x 10 ** 6
-            [
-                random_floats_with_mean_zero_variance_one,
-                random_floats_with_mean_zero_variance_one1
-            ]
-    )
-
-    # Transform Z to get correlated variables X
-    X = A @ x_matrix
-    print(np.cov(X))
+    new_x_values = np.linalg.inv(a_matrix) @ y_values_transposed
+    print(np.cov(new_x_values))
 
 if __name__ == "__main__":
     main()
