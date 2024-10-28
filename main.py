@@ -197,17 +197,13 @@ def calculate_eigen(matrix: np.ndarray) -> tuple[Any, Any]:
 
 def create_a_matrix(cx: np.ndarray) -> np.ndarray:
     eigenvalues, eigenvectors = calculate_eigen(cx)
-    unnormalized_eigenvectors= eigenvectors / eigenvectors[1:, :]
-    return unnormalized_eigenvectors.T
+    normalized_eigenvectors= eigenvectors / eigenvectors[1:, :]
+    return normalized_eigenvectors.T
 
 def main():
 
     # Generate X and Y values with normal pdf and zero mean and variance equal to one.
     random_floats_with_mean_zero_variance1 = generate_random_floats_with_mean_variance(
-        mean=0.0,
-        variance=np.sqrt(1)
-    )
-    random_floats_with_mean_zero_variance2 = generate_random_floats_with_mean_variance(
         mean=0.0,
         variance=np.sqrt(1)
     )
