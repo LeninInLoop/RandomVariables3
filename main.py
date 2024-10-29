@@ -102,8 +102,9 @@ def main():
             y2
         ]
     )
-    cy_calculated_manually = np.cov(y_values_transposed)
-    print("cy Matrix calculated from random variables inside the vector (with numpy):\n",cy_calculated_manually , "\n" + 50 * "-")
+
+    cy_calculated_manually_with_numpy = np.cov(y_values_transposed)
+    print("cy Matrix calculated from random variables inside the vector (with numpy):\n",cy_calculated_manually_with_numpy , "\n" + 50 * "-")
 
     new_x_values = np.linalg.inv(a_matrix) @ y_values_transposed
     print("cx Matrix calculated from random variables inside the vector (with numpy):\n",np.cov(new_x_values) , "\n" + 50 * "-")
